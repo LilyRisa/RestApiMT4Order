@@ -22,60 +22,39 @@ if (socket_listen($sock, 5) === false) {
     echo "socket_listen() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
 }
 
-function send_data($msg, $fn = null){
+function send_data($msg, $data_post, $fn = null, $merge = false){
     global $sock;
     
-    fwrite(STDOUT, $msg."\n");
+    $data_param_socket = '';
+    if(!empty($data_post)){
+        foreach($data_post as $k => $v){
+            $data_param_socket .= "|$k=$v"; 
+        }
+    }
+    // fwrite(STDOUT, $msg."\n");
     $msgsock = socket_accept($sock);
-    fwrite(STDOUT, $msgsock."\n");
-    socket_write($msgsock, $msg, strlen($msg));
+    // fwrite(STDOUT, $msgsock."\n");
+    socket_write($msgsock, $msg.$data_param_socket, strlen($msg.$data_param_socket));
     // $buf = socket_read($msgsock, 2048, PHP_NORMAL_READ);
     $i=0;
+    $buf = '';
     do{
         $i++;
         fwrite(STDOUT, $i."\n");
-        $line = socket_read($msgsock,2048);
+        $line = socket_read($msgsock,6048, PHP_NORMAL_READ);
         fwrite(STDOUT, "result: ".$line."\n");
         $buf = $line;
     }while($line == "");
 
+    // while (($currentByte = socket_read($msgsock,6048, PHP_NORMAL_READ)) != "") {
+    //     // Do whatever you wish with the current byte
+    //     $buf .= $currentByte;
+    // }
+   
     fwrite(STDOUT, $buf."\n");
     socket_close($sock);
     if(is_callable($fn)) return $fn($buf);
     return $buf;
-    // $process = 1;
-    // $status = true;
-    // do{
-    //     if($process >= 10){
-    //         $status = false;
-    //     }
-    //     fwrite(STDOUT, $process);
-    //     if (($msgsock = socket_accept($sock)) === false) {
-    //         $process++;
-    //         break;
-    //     }
-    //     socket_write($msgsock, $msg, strlen($msg));
-    //     do{
-
-    //         if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
-    //             $process++;
-    //             break;
-    //         }
-    //         if (!$buf = trim($buf)) {
-    //             continue;
-    //         }
-
-    //         socket_close($sock);
-
-    //         if(is_callable($fn)) return $fn($buf);
-    //         return $buf;
-
-    //     }while($status);
-    // }while($status);
-    // socket_close($sock);
-
-    // if(is_callable($fn)) return $fn(false);
-    // return false;
 
 }
 
