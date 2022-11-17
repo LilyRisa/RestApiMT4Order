@@ -1,12 +1,11 @@
 <?php
+
+define('STDOUT', fopen('php://stdout', 'w'));
 error_reporting(E_ALL);
 
 /* Allow the script to hang around waiting for connections. */
 set_time_limit(0);
 
-/* Turn on implicit output flushing so we see what we're getting
- * as it comes in. */
-ob_implicit_flush();
 
 $address = '127.0.0.1';
 $port = 8000;
@@ -23,37 +22,62 @@ if (socket_listen($sock, 5) === false) {
     echo "socket_listen() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
 }
 
-do {
-    echo 'Server starting on '.$address.':'.$port;
-    if (($msgsock = socket_accept($sock)) === false) {
-        echo "socket_accept() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
-        break;
-    }
-    /* Send instructions. */
-    // $msg = "\nWelcome to the PHP Test Server. \n" .
-    //     "To quit, type 'quit'. To shut down the server type 'shutdown'.\n";
-    // socket_write($msgsock, $msg, strlen($msg));
+function send_data($msg, $fn = null){
+    global $sock;
+    
+    fwrite(STDOUT, $msg."\n");
+    $msgsock = socket_accept($sock);
+    fwrite(STDOUT, $msgsock."\n");
+    socket_write($msgsock, $msg, strlen($msg));
+    // $buf = socket_read($msgsock, 2048, PHP_NORMAL_READ);
+    $i=0;
+    do{
+        $i++;
+        fwrite(STDOUT, $i."\n");
+        $line = socket_read($msgsock,2048);
+        fwrite(STDOUT, "result: ".$line."\n");
+        $buf = $line;
+    }while($line == "");
 
-    do {
-        if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
-            echo "socket_read() failed: reason: " . socket_strerror(socket_last_error($msgsock)) . "\n";
-            break 2;
-        }
-        if (!$buf = trim($buf)) {
-            continue;
-        }
-        if ($buf == 'quit') {
-            break;
-        }
-        if ($buf == 'shutdown') {
-            socket_close($msgsock);
-            break 2;
-        }
-        $talkback = "PHP: You said '$buf'.\n";
-        socket_write($msgsock, $talkback, strlen($talkback));
-        echo "$buf\n";
-    } while (true);
-    socket_close($msgsock);
-} while (true);
+    fwrite(STDOUT, $buf."\n");
+    socket_close($sock);
+    if(is_callable($fn)) return $fn($buf);
+    return $buf;
+    // $process = 1;
+    // $status = true;
+    // do{
+    //     if($process >= 10){
+    //         $status = false;
+    //     }
+    //     fwrite(STDOUT, $process);
+    //     if (($msgsock = socket_accept($sock)) === false) {
+    //         $process++;
+    //         break;
+    //     }
+    //     socket_write($msgsock, $msg, strlen($msg));
+    //     do{
 
-socket_close($sock);
+    //         if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
+    //             $process++;
+    //             break;
+    //         }
+    //         if (!$buf = trim($buf)) {
+    //             continue;
+    //         }
+
+    //         socket_close($sock);
+
+    //         if(is_callable($fn)) return $fn($buf);
+    //         return $buf;
+
+    //     }while($status);
+    // }while($status);
+    // socket_close($sock);
+
+    // if(is_callable($fn)) return $fn(false);
+    // return false;
+
+}
+
+// send_data('history_order');
+
