@@ -38,6 +38,46 @@ function send_data($msg, $data_post, $fn = null, $merge = false){
     // $buf = socket_read($msgsock, 2048, PHP_NORMAL_READ);
     $i=0;
     $buf = '';
+
+
+    if($merge){
+        $data_arr = [];
+        do{
+            $i++;
+            fwrite(STDOUT, $i."\n");
+            $line = socket_read($msgsock,6048);
+            fwrite(STDOUT, "result: ".$line."\n");
+            $data_arr[] = $line;
+            if (strpos($line, '@end') !== false) break;
+        }while(true);
+
+        $data_raw = [];
+
+        if(!empty($data_arr)){
+            foreach($data_arr as $item){
+                $item = str_replace('@end', '', $item);
+                $tmp = explode('}',$item);
+                if(count($tmp) >= 2){
+                    foreach($tmp as $t){
+                        if($t != '}') $data_raw[] = $t.'}';
+                    }
+                }else{
+                    $data_raw[] = $item;
+                }
+            }
+    
+            foreach($data_raw as $key => $value){
+                $data_raw[$key] = json_decode($value);
+            }
+        }else{
+            if(is_callable($fn)) return $fn([]);
+                return [];
+        }
+        
+        if(is_callable($fn)) return $fn($data_raw);
+        return $data_raw;
+    }
+    
     do{
         $i++;
         fwrite(STDOUT, $i."\n");

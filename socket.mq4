@@ -14,6 +14,7 @@ input ushort port = 8000;
 
 ClientSocket * glbConnection = NULL;
 string data = " {msg}";
+string history_order[];
 
 void OnTick()
    {
@@ -22,12 +23,23 @@ void OnTick()
       
       if (glbConnection.IsSocketConnected()) {
          data = glbConnection.Receive();
-         Print(data);
-   
+         
          if(data != ""){
             string data_recv = MsgSocket(data);
-            if(MsgSocket(data) != ""){
-               glbConnection.Send(data_recv);
+            Print(data_recv);
+            if(data_recv != ""){
+               if(data_recv == "0"){
+                  for (int i = 0; i < ArraySize(history_order); i++)
+                  {
+                     Print(history_order[i]);
+                     glbConnection.Send(history_order[i]);
+                  }
+                  glbConnection.Send("@end");
+                  
+               }else{
+                  glbConnection.Send(data_recv);
+               }
+               
             }
          }
          
@@ -54,7 +66,9 @@ string MsgSocket(string msg){
    
    Print(controller);
    if(controller == "history_order"){
-      return history_order();
+      // return history_order();
+      history_order_byte_line();
+      return "0";
    }
 
    if(controller == "symbol_total"){
@@ -66,6 +80,20 @@ string MsgSocket(string msg){
    }
 
    return "";
+}
+
+void history_order_byte_line(){
+   int i, hstTotal=OrdersHistoryTotal();
+   string list_order = "";
+   ArrayResize(history_order, hstTotal);
+   for(i=0;i<hstTotal;i++){
+      if(OrderSelect(i,SELECT_BY_POS,MODE_HISTORY)==false){
+         Print("Access to history failed with error (",GetLastError(),")");
+         break;
+      }else{
+        history_order[i] = "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\", \"order_magic_number\" : \""+OrderMagicNumber()+"\"}";
+      }
+   }
 }
 
 

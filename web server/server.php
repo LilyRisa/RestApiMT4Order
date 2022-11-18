@@ -5,6 +5,18 @@ $endpoint = end($route);
 
 header('Content-Type: application/json; charset=utf-8');
 
+if($endpoint == 'history_order'){
+    $data = send_data($endpoint, $_POST , function($result){
+        $data = array_filter($result);
+        if(!empty($data)) return array_values($data);
+        return $data;
+    }, true);
+    
+    echo json_encode($data);
+    die();
+}
+
+
 $data = send_data($endpoint, $_POST , function($result){
     $data = json_decode($result);
     if(!is_array($data)) return $data;
