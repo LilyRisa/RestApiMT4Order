@@ -178,7 +178,7 @@ string history_order(){
          break;
       }else{
          if(i == hstTotal -1){
-            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\",";" \"order_magic_number\" : \""+OrderMagicNumber()+"\"}";
+            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\", \"order_magic_number\" : \""+OrderMagicNumber()+"\"}";
          }else{
             list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\", \"order_magic_number\" : \""+OrderMagicNumber()+"\"},";
          }
