@@ -25,8 +25,10 @@ void OnTick()
          Print(data);
    
          if(data != ""){
-            Print(MsgSocket(data));
-            glbConnection.Send(MsgSocket(data));
+            string data_recv = MsgSocket(data);
+            if(MsgSocket(data) != ""){
+               glbConnection.Send(data_recv);
+            }
          }
          
       }
@@ -41,11 +43,102 @@ void OnTick()
    }
 
 string MsgSocket(string msg){
-   if(msg == "history_order"){
+   string result[];
+   int length = StringSplit(msg, StringGetCharacter("|", 0),result);
+   string controller = "";
+   if(length > 0){
+      controller = result[0];
+   }else{
+      controller = msg;
+   }
+   
+   Print(controller);
+   if(controller == "history_order"){
       return history_order();
    }
 
+   if(controller == "symbol_total"){
+      return symbol_total();
+   }
+
+   if(controller == "open_order"){
+      return open_order(result);
+   }
+
    return "";
+}
+
+
+string open_order(string &order[]){
+   int ListLength = ArraySize(order);
+   string symbol;
+   string variable[];
+   int cmd, slippage, magic = 1;
+   double volume, price, stoploss, takeprofit;
+   datetime expiration = 0;
+
+   int check_order = 0;
+
+   for(int i = 1; i < ArraySize(order); i++){
+      StringSplit(order[i], StringGetCharacter("=", 0),variable);
+      if(variable[0] == "symbol"){
+         symbol = variable[1];
+      }else
+      if(variable[0] == "cmd"){
+         cmd = StrToInteger(variable[1]);
+      }else
+      if(variable[0] == "slippage"){
+         slippage = StrToInteger(variable[1]);
+      }else
+      if(variable[0] == "volume"){
+         volume = StrToDouble(variable[1]);
+      }else
+      if(variable[0] == "price"){
+         price = StrToDouble(variable[1]);
+      }else
+      if(variable[0] == "stoploss"){
+         stoploss = StrToDouble(variable[1]);
+      }else
+      if(variable[0] == "takeprofit"){
+         takeprofit = StrToDouble(variable[1]);
+      }else
+      if(variable[0] == "expiration"){
+         if(variable[1] != "0") expiration = StrToTime(variable[1]);
+      }else if(variable[0] == "magic_number"){
+         magic = StrToInteger(variable[1]);
+      }
+   }
+   Print(Symbol()+"|"+cmd+"|"+slippage+"|"+volume+"|"+price+"|"+stoploss+"|"+takeprofit+ "|");
+   for(int pos = OrdersTotal()-1; pos >= 0 ; pos--){
+      if (OrderSelect(pos, SELECT_BY_POS) && OrderMagicNumber() == magic){
+         check_order++;
+         break;
+      }
+   }
+   int status;
+   if(check_order == 0){
+      status = OrderSend(symbol,cmd,volume,price,slippage,stoploss,takeprofit,"CongMinhOrder",magic,expiration,clrGreen);
+   }else{
+      status = -1;
+   }
+   if(status < 0) return "{\"status\" : "+GetLastError()+"}";
+   return "{\"status\" : "+status+"}";
+   
+}
+
+string symbol_total(){
+   int total=SymbolsTotal(true)-1;
+   string data = "";
+   for(int i=total-1;i>=0;i--)
+   {
+      string Sembol=SymbolName(i,true);
+      if(i == 0){
+         data = data + "{\"number\" : \""+string(i)+"\",  \"name\" : \""+Sembol+"\"}";
+      }else{
+          data = data + "{\"number\" : \""+string(i)+"\",  \"name\" : \""+Sembol+"\"},";
+      }
+   }
+   return "["+data+"]";
 }
 
 string history_order(){
@@ -57,13 +150,13 @@ string history_order(){
          break;
       }else{
          if(i == hstTotal -1){
-            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\"}";
+            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\",";" \"order_magic_number\" : \""+OrderMagicNumber()+"\"}";
          }else{
-            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\"},";
+            list_order = list_order + "{\"order_ticket\" : \""+OrderTicket()+"\", \"order_symbol\" : \""+OrderSymbol()+"\", \"order_lots\" : \""+OrderLots()+"\", \"order_open_price\" : \""+OrderOpenPrice()+"\", \"order_open_time\" : \""+OrderOpenTime()+"\", \"order_profit\" : \""+OrderProfit()+"\", \"order_take_profit\" : \""+OrderTakeProfit()+"\", \"order_stop_loss\" : \""+OrderStopLoss()+"\", \"order_magic_number\" : \""+OrderMagicNumber()+"\"},";
          }
       }
    }
-   return "["+list_order+"]";
+   return "["+list_order+"]\n\r";
 }
 
 string convert_array_to_json(string &list_order[]){
@@ -76,5 +169,5 @@ string convert_array_to_json(string &list_order[]){
          json = json + list_order[i] + ",";
       }
    }
-   return json + "]";
+   return json + "]\n\r";
 }
