@@ -81,7 +81,7 @@ function send_data($msg, $data_post, $fn = null, $merge = false){
     do{
         $i++;
         fwrite(STDOUT, $i."\n");
-        $line = socket_read($msgsock,6048, PHP_NORMAL_READ);
+        $line = socket_read($msgsock,6048);
         fwrite(STDOUT, "result: ".$line."\n");
         $buf = $line;
     }while($line == "");
