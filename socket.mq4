@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property copyright   "forextradingvn.top"
 #property link        "https://forextradingvn.top"
-#property description "Telegram notification"
+#property description "Api connect EA"
 
 #include "../../Include\\Socket.mqh";
 
